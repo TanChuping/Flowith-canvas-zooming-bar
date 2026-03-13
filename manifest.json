@@ -1,0 +1,16 @@
+{
+    "manifest_version": 3,
+    "name": "Flowith JoyStick Zoom",
+    "version": "1.0.0",
+    "description": "为 Flowith 画布替换更舒适、丝滑的摇杆缩放滑块 (带高级毛玻璃 UI)。",
+    "icons": {
+      "128": "icon.png"
+    },
+    "content_scripts": [
+      {
+        "matches": ["https://flowith.io/*"],
+        "js": ["content.js"],
+        "run_at": "document_idle"
+      }
+    ]
+  }
