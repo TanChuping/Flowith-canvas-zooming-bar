@@ -3,7 +3,12 @@
 [![Version](https://img.shields.io/badge/version-1.1.0-blueviolet)](https://flowith.io)
 [![License](https://img.shields.io/badge/license-MIT-blue)](https://opensource.org/licenses/MIT)
 
-**Flowith JoyStick Zoom** 是一款专为 [Flowith.io](https://flowith.io) 深度定制的画布交互增强扩展。它改变了原生点击缩放模式，引入了新的滑块：一个用于宏观定位的绝对进度条，以及一个用于微调的竖向摇杆。
+**Flowith JoyStick Zoom** 是一款专为 [Flowith.io](https://flowith.io) 深度定制的画布交互增强扩展。它改变了原生点击缩放模式，引入了新的滑块：一个用于宏观定位的横向进度条，以及一个用于微调的竖向摇杆。
+
+当前 `1.1.0` 版本已适配新版 Flowith 画布布局：
+- 横向缩放条会挂载到右上角工具栏，并显示在“创作台”按钮右侧。
+- 竖向摇杆保持在页面右侧中部，供细粒度缩放微调。
+- 扩展会同步读取页面当前缩放百分比，避免 UI 与实际画布比例脱节。
 
 
 ---
@@ -34,7 +39,8 @@
 
 
 本项目已上架 Google Chrome Web Store：
-https://chromewebstore.google.com/detail/flowith-joystick-zoom/gilajkldcokpmankbibejblneglnfddg
+
+[Flowith Joystick Zoom - Chrome Web Store](https://chromewebstore.google.com/detail/flowith-joystick-zoom/gilajkldcokpmankbibejblneglnfddg)
 
 ---
 

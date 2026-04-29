@@ -9,20 +9,42 @@ const MAX_ZOOM = 4.0;
 const MIN_LOG = Math.log(MIN_ZOOM);
 const MAX_LOG = Math.log(MAX_ZOOM);
 
+function isCanvasPage() {
+  return (
+    window.location.href.includes('/conv/') ||
+    !!document.querySelector('.react-flow__pane') ||
+    !!document.getElementById('core_area')
+  );
+}
+
+function getTopToolbar() {
+  const panel = document.querySelector('.react-flow__panel.top.right');
+  if (!panel) return null;
+  return panel.firstElementChild || panel;
+}
+
+function getZoomButton() {
+  return document.querySelector('.react-flow__panel.top.right button[aria-label="适应画布"]');
+}
+
+function getStudioButton() {
+  return document.querySelector('.react-flow__panel.top.right button[aria-label="创作台"]');
+}
+
 // 辅助：获取画布实时数字
 function syncZoomFromPage() {
-  const plusPath = document.querySelector('path[d*="M228,128"]');
-  if (plusPath) {
-    const container = plusPath.closest('div.cursor-pointer').parentElement;
-    for (let child of container.children) {
-      const text = child.textContent || '';
-      if (text.includes('%') && /\d/.test(text)) {
-        const match = text.match(/(\d+)/);
-        if (match) {
-          currentZoomVal = parseInt(match[1]) / 100;
-          return;
-        }
-      }
+  const zoomButton = getZoomButton();
+  if (!zoomButton) return;
+
+  const zoomText = Array.from(zoomButton.querySelectorAll('span')).find((el) => {
+    const text = el.textContent || '';
+    return text.includes('%') && /\d/.test(text);
+  });
+
+  if (zoomText) {
+    const match = zoomText.textContent.match(/(\d+)/);
+    if (match) {
+      currentZoomVal = parseInt(match[1], 10) / 100;
     }
   }
 }
@@ -64,7 +86,7 @@ function fireZoomEvent(deltaY) {
 // 1. UI 自动化管理 (React 对抗)
 // ==========================================
 function maintainUI() {
-  if (!window.location.href.includes('/conv/')) {
+  if (!isCanvasPage()) {
     ['flowith-h-slider', 'flowith-v-slider'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = 'none';
@@ -72,39 +94,38 @@ function maintainUI() {
     return;
   }
 
-  const plusPath = document.querySelector('path[d*="M228,128"]');
-  if (plusPath) {
-    const container = plusPath.closest('div.cursor-pointer').parentElement;
-    Array.from(container.children).forEach(child => {
-      const html = child.innerHTML || '';
-      const text = child.textContent || '';
-      
-      if (text.includes('%') && /\d/.test(text)) {
-        child.style.setProperty('opacity', '0', 'important');
-        child.style.setProperty('position', 'absolute', 'important');
-        child.style.setProperty('pointer-events', 'none', 'important');
-        return;
-      }
+  const hSlider = document.getElementById('flowith-h-slider');
+  const vSlider = document.getElementById('flowith-v-slider');
+  const toolbar = getTopToolbar();
+  const studioButton = getStudioButton();
 
-      const isOurs = child.id === 'flowith-h-slider';
-      const isWhiteList = html.includes('M47.51,112.49') || html.includes('M100,36H56') || 
-                          html.includes('M128,20A108') || html.includes('M180,232a12');
-      if (!isOurs && !isWhiteList) {
-        child.style.setProperty('display', 'none', 'important');
-      }
+  if (toolbar && studioButton && hSlider && hSlider.parentElement !== toolbar) {
+    Object.assign(hSlider.style, {
+      position: '',
+      top: '',
+      bottom: '',
+      left: '',
+      right: '',
+      marginLeft: '8px',
+      display: 'flex',
+      alignItems: 'center',
+      flex: '0 0 auto'
     });
-    
-    let hSlider = document.getElementById('flowith-h-slider');
-    if (hSlider && hSlider.parentElement !== container) {
-      Object.assign(hSlider.style, { position: '', bottom: '', right: '', marginLeft: '12px' });
-      container.appendChild(hSlider);
-    }
+    toolbar.insertBefore(hSlider, studioButton.nextSibling);
+  } else if (hSlider && !toolbar) {
+    Object.assign(hSlider.style, {
+      position: 'fixed',
+      top: '16px',
+      right: '160px',
+      marginLeft: '0',
+      display: 'flex',
+      alignItems: 'center',
+      zIndex: '9999'
+    });
   }
-  
-  ['flowith-h-slider', 'flowith-v-slider'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.style.display = 'flex';
-  });
+
+  if (hSlider) hSlider.style.display = 'flex';
+  if (vSlider) vSlider.style.display = 'block';
 }
 
 // ==========================================
@@ -113,7 +134,7 @@ function maintainUI() {
 function createSliders() {
   if (document.getElementById('flowith-h-slider')) return;
 
-  // --- 底部绝对定位条 ---
+  // --- 右上角绝对定位条 ---
   const hWrapper = document.createElement('div');
   hWrapper.id = 'flowith-h-slider';
   const hTrack = document.createElement('div');
@@ -159,6 +180,12 @@ function createSliders() {
 
   hTrack.appendChild(hThumb);
   hWrapper.appendChild(hTrack);
+  Object.assign(hWrapper.style, {
+    display: 'flex',
+    alignItems: 'center',
+    marginLeft: '8px',
+    zIndex: '9999'
+  });
   document.body.appendChild(hWrapper);
 
   // --- 右侧竖向摇杆 (圆角胶囊状) ---
@@ -170,7 +197,8 @@ function createSliders() {
     position: 'fixed', right: '24px', top: '50%', transform: 'translateY(-50%)',
     width: '24px', height: '180px', background: 'rgba(110, 113, 242, 0.15)',
     backdropFilter: 'blur(8px)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', zIndex: '9999',
-    userSelect: 'none'
+    userSelect: 'none',
+    display: 'block'
   });
   Object.assign(vThumb.style, {
     position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)',
